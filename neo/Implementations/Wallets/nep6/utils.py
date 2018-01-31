@@ -25,9 +25,9 @@ nep6_schema = {
                     "label": {"type": ["string", "null"]},
                     "isDefault": {"type": "boolean"},
                     "lock": {"type": "boolean"},
-                    "key": {"type": "string"},
+                    "key": {"type": ["string", "null"]},
                     "contract": {
-                        "type": "object",
+                        "type": ["object", "null"],
                         "properties": {
                             "script": {"type": ["string", "null"]},
                             "parameters": {
@@ -77,5 +77,5 @@ def is_nep6_wallet(path):
         validate(content, nep6_schema)
         return True
     except Exception as e:
-        logger.debug(str(e))
+        logger.exception(e)
         return False

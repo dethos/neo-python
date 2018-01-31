@@ -285,7 +285,7 @@ class PromptInterface(object):
                 password_key = to_aes_key(passwd1)
 
                 try:
-                    self.Wallet = LegecyWallet.Create(path=path,
+                    self.Wallet = LegacyWallet.Create(path=path,
                                                       password=password_key)
                     contract = self.Wallet.GetDefaultContract()
                     key = self.Wallet.GetKey(contract.PublicKeyHash)
