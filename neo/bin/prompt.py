@@ -25,7 +25,9 @@ from neo.IO.MemoryStream import StreamManager
 from neo.Wallets.utils import to_aes_key
 from neo.Implementations.Blockchains.LevelDB.LevelDBBlockchain import LevelDBBlockchain
 from neo.Implementations.Blockchains.LevelDB.DebugStorage import DebugStorage
-from neo.Implementations.Wallets.peewee.UserWallet import UserWallet
+from neo.Implementations.Wallets.peewee.UserWallet import UserWallet as LegacyWallet
+from neo.Implementations.Wallets.nep6.UserWallet import UserWallet as NEP6Wallet
+from neo.Implementations.Wallets.nep6.utils import is_nep6_wallet
 from neo.Implementations.Notifications.LevelDB.NotificationDB import NotificationDB
 from neo.Network.NodeLeader import NodeLeader
 from neo.Prompt.Commands.BuildNRun import BuildAndRun, LoadAndRun
@@ -243,7 +245,12 @@ class PromptInterface(object):
                 password_key = to_aes_key(passwd)
 
                 try:
-                    self.Wallet = UserWallet.Open(path, password_key)
+                    if is_nep6_wallet(path):
+                        print("Trying to open NEP6 wallet...")
+                        self.Wallet = NEP6Wallet.Open(path, password_key)
+                    else:
+                        print("Trying to open Legacy wallet...")
+                        self.Wallet = LegacyWallet.Open(path, password_key)
 
                     self.start_wallet_loop()
                     print("Opened wallet at %s" % path)
@@ -278,8 +285,8 @@ class PromptInterface(object):
                 password_key = to_aes_key(passwd1)
 
                 try:
-                    self.Wallet = UserWallet.Create(path=path,
-                                                    password=password_key)
+                    self.Wallet = LegecyWallet.Create(path=path,
+                                                      password=password_key)
                     contract = self.Wallet.GetDefaultContract()
                     key = self.Wallet.GetKey(contract.PublicKeyHash)
                     print("Wallet %s" % json.dumps(self.Wallet.ToJson(), indent=4))

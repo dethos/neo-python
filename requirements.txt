@@ -28,6 +28,7 @@ greenlet==0.4.13
 hyperlink==18.0.0
 idna==2.6
 incremental==17.5.0
+jsonschema==2.6.0
 klein==17.10.0
 logzero==1.5.0
 memory-profiler==0.52.0
