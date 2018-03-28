@@ -61,7 +61,7 @@ nep6_schema = {
 def is_nep6_wallet(path):
     """Checks if a given file follows the NEP6 standard
 
-    This function tries to parse the files contents as JSON and the
+    This function tries to parse the file contents as JSON and
     checks if all the required fields are accoring to the spec.
 
     Arguments:
