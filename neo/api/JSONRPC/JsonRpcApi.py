@@ -320,6 +320,13 @@ class JsonRpcApi:
                 raise JsonRpcError(-100, "Unknown block")
             return self.get_blockheader_output(blockheader, params)
 
+        elif method == "dumpprivkey":
+            if self.wallet:
+                address = params[0] if len(params) > 0 else ""
+                return self.dumpprivkey(address)
+            else:
+                raise JsonRpcError(-400, "Access denied.")
+
         raise JsonRpcError.methodNotFound()
 
     def get_custom_error_payload(self, request_id, code, message):
@@ -578,3 +585,17 @@ class JsonRpcApi:
             return jsn
 
         return Helper.ToArray(blockheader).decode('utf-8')
+
+    def dumpprivkey(self, address):
+        """ Find the private key of a given address
+
+        Returns the private key in the WIF format if it exists in the wallet
+        """
+        try:
+            address_sh = self.wallet.ToScriptHash(address)
+        except Exception:
+            raise JsonRpcError(-32602, "Invalid params")
+        key = self.wallet.GetKeyByScriptHash(address_sh)
+        if not key:
+            raise JsonRpcError(-32602, "Invalid params")
+        return key.Export()
