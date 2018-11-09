@@ -1542,3 +1542,70 @@ class JsonRpcApiTestCase(BlockchainFixtureTestCase):
         blockheader = Helper.AsSerializableWithType(output, 'neo.Core.Header.Header')
         self.assertEqual(blockheader.Index, 11)
         self.assertEqual(str(blockheader.Hash), GetBlockchain().GetBlockHash(11).decode('utf8'))
+
+    def test_dumpprivkey_no_wallet(self):
+        req = self._gen_rpc_req("dumpprivkey", params=[])
+        mock_req = mock_request(json.dumps(req).encode("utf-8"))
+        res = json.loads(self.app.home(mock_req))
+        error = res.get('error', {})
+        self.assertEqual(error.get('code', None), -400)
+        self.assertEqual(error.get('message', None), "Access denied.")
+
+    def test_dumpprivkey_invalid_address(self):
+        test_wallet_path = os.path.join(mkdtemp(), "getnewaddress.db3")
+        self.app.wallet = UserWallet.Create(
+            test_wallet_path,
+            to_aes_key('awesomepassword')
+        )
+
+        req = self._gen_rpc_req("dumpprivkey", params=["invalid address"])
+        mock_req = mock_request(json.dumps(req).encode("utf-8"))
+        res = json.loads(self.app.home(mock_req))
+        error = res.get('error', {})
+        self.assertEqual(error.get('code', None), -32602)
+        self.assertEqual(error.get('message', None), "Invalid params")
+
+        self.app.wallet.Close()
+        self.app.wallet = None
+        os.remove(test_wallet_path)
+
+    def test_dumpprivkey_non_existent_address(self):
+        test_wallet_path = os.path.join(mkdtemp(), "getnewaddress.db3")
+        self.app.wallet = UserWallet.Create(
+            test_wallet_path,
+            to_aes_key('awesomepassword')
+        )
+
+        req = self._gen_rpc_req("dumpprivkey", 
+                                params=["AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y"])
+        mock_req = mock_request(json.dumps(req).encode("utf-8"))
+        res = json.loads(self.app.home(mock_req))
+        error = res.get('error', {})
+        self.assertEqual(error.get('code', None), -32602)
+        self.assertEqual(error.get('message', None), "Invalid params")
+
+        self.app.wallet.Close()
+        self.app.wallet = None
+        os.remove(test_wallet_path)
+
+    def test_dumpprivkey_valid_and_existent_address(self):
+        test_wallet_path = os.path.join(mkdtemp(), "getnewaddress.db3")
+        self.app.wallet = UserWallet.Create(
+            test_wallet_path,
+            to_aes_key('awesomepassword')
+        )
+        address = self.app.wallet.Addresses[0]
+        address_sh = self.app.wallet.ToScriptHash(address)
+
+        req = self._gen_rpc_req("dumpprivkey", params=[address])
+        mock_req = mock_request(json.dumps(req).encode("utf-8"))
+        res = json.loads(self.app.home(mock_req))
+        result = res.get('result')
+
+        self.assertEqual(
+            result, self.app.wallet.GetKeyByScriptHash(address_sh).Export()
+        )
+
+        self.app.wallet.Close()
+        self.app.wallet = None
+        os.remove(test_wallet_path)
